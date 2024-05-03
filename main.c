@@ -2,11 +2,13 @@
 #include <ncurses.h>
 #include "dstruct.h"
 #include "navigation.h"
+#include "textops.h"
 
 #define UP 'k'
 #define DOWN 'j'
 #define RIGHT 'l'
 #define LEFT 'h'
+#define INSERT 'i'
 
 int main(int argc, char *argv[]) {
 	int max_row, max_col, row=0, col=0;
@@ -47,11 +49,15 @@ int main(int argc, char *argv[]) {
 				if(col>(curr_line->size)-1) col=(curr_line->size)-1;
 				mv_left(&row, &col, &curr_line, &curr_node);
 				break;
+			case INSERT:
+				insert_mode(&row, &col, &curr_line, &curr_node);
 		}
 		if(ch=='q') break;
 	}
 
 	mvprintw(max_row-2, 0, "Last Char: %c", curr_node->ch); // move then print
+	mvprintw(max_row-3, 0, "Last Line: ", curr_node->ch); 
+	displayLine(curr_line->start);
 
 	refresh(); //print on screen
 	getch(); // wait for user input
