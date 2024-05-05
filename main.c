@@ -12,7 +12,7 @@
 
 int main(int argc, char *argv[]) {
 	int max_row, max_col, row=0, col=0;
-	char ch;
+	unsigned int ch; // variable is unsigned int to increase range
 	line *top, *curr_line;
 	dNode *curr_node;
 	FILE *fiptr, *foptr;
@@ -41,26 +41,28 @@ int main(int argc, char *argv[]) {
 			case DOWN:
 				mv_down(&row, &col, &curr_line, &curr_node); break;
 			case RIGHT:
-				if(col>(curr_line->size)-1) col=(curr_line->size)-1; // Update row
 				mv_right(&row, &col, &curr_line, &curr_node);
 				break;
 			case LEFT:
-				if(col>(curr_line->size)-1) col=(curr_line->size)-1;
 				mv_left(&row, &col, &curr_line, &curr_node);
 				break;
 			case INSERT:
-				if(col>(curr_line->size)-1) col=(curr_line->size)-1;
 				insert_mode(&row, &col, &curr_line, &curr_node);
 		}
 		if(ch=='q') break;
 	}
 
+	fclose(fiptr);
 	mvprintw(max_row-2, 0, "Last Char: %c Last Line Size: %d", curr_node->ch, curr_line->size); // move then print
 	mvprintw(max_row-3, 0, "Last Line: ", curr_node->ch); 
 	displayLine(curr_line->start);
-
+	mvprintw(max_row-1, 0, "Save contents? (y/n): ");
 	refresh(); //print on screen
-	getch(); // wait for user input
+	ch=getch(); // wait for user input
+	if(ch=='y') {
+		foptr=fopen(argv[1], "w");
+		save(top, foptr);
+	}
 	endwin(); // end curses mode
 	
 	return 0;

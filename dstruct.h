@@ -12,6 +12,7 @@ typedef struct dNode {
 
 typedef struct line{
 	dNode *start;
+	dNode *end;
 	struct line *prev_line;
 	struct line *next_line;
 	unsigned int size;
@@ -44,6 +45,7 @@ line* createList(FILE *file_in) {
 			n++;
 		}
 		if(c=='\n') { // if at the end of a line
+			curr_line->end=curr->prev; // set end of line
 			curr_line->size=n-1; //record line size
 			curr_line->next_line=(line*)malloc(sizeof(line));
 			(curr_line->next_line)->prev_line=curr_line;
@@ -69,17 +71,11 @@ void displayLine(dNode* head) {
 	}
 }
 
-void write_line(dNode* head, FILE *out) {
-	dNode *curr=head;
-	while(curr!=NULL) {
-		fputc(curr->ch, out);
-		curr=curr->next;
-	}
-}
-
 void display(line *head) {
 	line *curr=head;
-	int count=0;
+	int count=0, row, col;
+	getyx(stdscr, row, col);
+	move(row, 0);
 	while(curr!=NULL) { // traverse lines until it finds NULL
 		displayLine(curr->start);
 		refresh();
@@ -88,5 +84,23 @@ void display(line *head) {
 		curr=curr->next_line;
 	}
 	printw("\nLines printed: %d", count);
+	getmaxyx(stdscr, row, col);
+	mvprintw(row-1, 0, "Rows: %d Columns: %d", row, col);
 	refresh();
+}
+
+void write_line(dNode* head, FILE *out) {
+	dNode *curr=head;
+	while(curr!=NULL) {
+		fputc(curr->ch, out);
+		curr=curr->next;
+	}
+}
+
+void save(line *top, FILE *out) {
+	line *curr_line=top;
+	while(curr_line!=NULL) {
+		write_line(curr_line->start, out);
+		curr_line=curr_line->next_line;
+	}
 }
