@@ -29,34 +29,34 @@ line* createList(FILE *file_in) {
 	curr_line->prev_line=NULL;
 
 	while(fscanf(file_in, "%c", &c)!=EOF) {//Iterate until EOF
+		if(n==0) { // if start of new line
+			curr_line->start=(dNode*) malloc(sizeof(dNode));
+			curr=curr_line->start; // set the current line's start as the current char
+			curr->prev=NULL;
+			curr->ch=c;
+			n++;
+		}
+		else { // if at the middle of a line
+			curr->next=(dNode*) malloc(sizeof(dNode));
+			(curr->next)->prev=curr;
+			curr=curr->next;
+			curr->ch=c;
+			n++;
+		}
 		if(c=='\n') { // if at the end of a line
-			curr_line->size=n; //record line size
+			curr_line->size=n-1; //record line size
 			curr_line->next_line=(line*)malloc(sizeof(line));
 			(curr_line->next_line)->prev_line=curr_line;
 			curr_line=curr_line->next_line;
 			n=0; //restart count
 			curr->next=NULL; //assigns null to last node
 		}
-		else { 
-			if(n==0) { // if start of new line
-				curr_line->start=(dNode*) malloc(sizeof(dNode));
-				curr=curr_line->start; // set the current line's start as the current char
-				curr->prev=NULL;
-				curr->ch=c;
-				n++;
-			}
-			else { // if at the middle of a line
-				curr->next=(dNode*) malloc(sizeof(dNode));
-				(curr->next)->prev=curr;
-				curr=curr->next;
-				curr->ch=c;
-				n++;
-			}
-		}
+		
 	}
 	curr_line=curr_line->prev_line;
 	free(curr_line->next_line); // free excess line because linux text files end with a \n
 	curr_line->next_line=NULL;
+	curr->next=NULL;
 	return head;
 }
 
@@ -82,9 +82,11 @@ void display(line *head) {
 	int count=0;
 	while(curr!=NULL) { // traverse lines until it finds NULL
 		displayLine(curr->start);
-		if(curr->next_line!=NULL) { addch('\n'); refresh();}
+		refresh();
+//		if(curr->next_line!=NULL) { addch('\n'); refresh();}
 		count++;
 		curr=curr->next_line;
 	}
-//	printw("\nLines printed: %d", count);
+	printw("\nLines printed: %d", count);
+	refresh();
 }

@@ -22,9 +22,8 @@ int main(int argc, char *argv[]) {
 
 	initscr(); // Starts curses mode 
 	keypad(stdscr, TRUE); // Enables use of keypad and F keys
-	//raw(); // Enters raw mode which disables line buffering and control seq.
+	raw(); // Enters raw mode which disables line buffering and control keys
 	noecho(); // Disables echo while doing getch() 
-	cbreak();
 	getmaxyx(stdscr, max_row, max_col); // get number of rows and column
 
 	top=createList(fiptr);
@@ -50,12 +49,13 @@ int main(int argc, char *argv[]) {
 				mv_left(&row, &col, &curr_line, &curr_node);
 				break;
 			case INSERT:
+				if(col>(curr_line->size)-1) col=(curr_line->size)-1;
 				insert_mode(&row, &col, &curr_line, &curr_node);
 		}
 		if(ch=='q') break;
 	}
 
-	mvprintw(max_row-2, 0, "Last Char: %c", curr_node->ch); // move then print
+	mvprintw(max_row-2, 0, "Last Char: %c Last Line Size: %d", curr_node->ch, curr_line->size); // move then print
 	mvprintw(max_row-3, 0, "Last Line: ", curr_node->ch); 
 	displayLine(curr_line->start);
 
