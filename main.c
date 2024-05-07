@@ -51,6 +51,9 @@ int main(int argc, char *argv[]) {
 		}
 		if(ch=='q') break;
 	}
+	while(top->prev_line!=NULL) {
+		top=top->prev_line;
+	}
 
 	fclose(fiptr);
 	mvprintw(max_row-2, 0, "Last Char: %c Last Line Size: %d", curr_node->ch, curr_line->size); // move then print
@@ -59,6 +62,7 @@ int main(int argc, char *argv[]) {
 	mvprintw(max_row-1, 0, "Save contents? (y/n): ");
 	refresh(); //print on screen
 	ch=getch(); // wait for user input
+	
 	if(ch=='y') {
 		foptr=fopen(argv[1], "w");
 		save(top, foptr);

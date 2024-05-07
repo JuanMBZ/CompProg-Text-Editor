@@ -27,7 +27,7 @@ line* createList(FILE *file_in) {
 	//Initialize line start
 	head=(line*)malloc(sizeof(line));
 	curr_line=head;
-	curr_line->prev_line=NULL;
+	curr_line->next_line=curr_line->prev_line=NULL;
 
 	while(fscanf(file_in, "%c", &c)!=EOF) {//Iterate until EOF
 		if(n==0) { // if start of new line
@@ -55,10 +55,19 @@ line* createList(FILE *file_in) {
 		}
 		
 	}
-	curr_line=curr_line->prev_line;
-	free(curr_line->next_line); // free excess line because linux text files end with a \n
-	curr_line->next_line=NULL;
-	curr->next=NULL;
+	if(curr_line->next_line==NULL && curr_line->prev_line==NULL) { //if file was empty or had one line
+		curr_line->start=(dNode*) malloc(sizeof(dNode));
+		curr_line->next_line=NULL;
+		curr_line->end=curr_line->start->prev=curr_line->start->next=NULL;
+		curr_line->start->ch='\n';
+		curr_line->size=0;
+	}
+	else {
+		curr_line=curr_line->prev_line;
+		free(curr_line->next_line); // free excess line because linux text files end with a \n
+		curr_line->next_line=NULL;
+		curr->next=NULL;
+	}
 	return head;
 }
 
@@ -83,7 +92,7 @@ void display(line *head) {
 		count++;
 		curr=curr->next_line;
 	}
-	printw("\nLines printed: %d", count);
+//	printw("\nLines printed: %d", count);
 	getmaxyx(stdscr, row, col);
 	mvprintw(row-1, 0, "Rows: %d Columns: %d", row, col);
 	refresh();
