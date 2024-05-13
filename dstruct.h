@@ -4,35 +4,40 @@
 /* header file for node struct and creating/displaying heads/list
  */
 
-typedef struct dNode {
+typedef struct dNode { // data struct to store each individual char
 	char ch;
 	struct dNode *prev;
 	struct dNode *next;
 } dNode;
 
-typedef struct line{
+typedef struct line{ // data struct for connectin lines and info about the lines
 	dNode *start;
 	dNode *end;
 	struct line *prev_line;
 	struct line *next_line;
-	unsigned int size;
+	int size; // number of ascii chars
+	int width; // length of line in display (made mainly to account for tab chars)
 } line;
 
-typedef struct buffer {
+typedef struct buffer { //contains info on the contents of the text editor and info on the display
 	line *curr_line;
 	dNode *curr_node;
+	
 	line *top;
 	line *bot;
 	line *head;
 	line *tail;
-	int nlines;
+	
+	int row, col; // coordinates of the cursor on the display
+	int nlines; // total number of lines
+	int max_row, max_col; // max y and x for the display, must be static
 } buffer;
 
 
 line* createList(FILE *file_in) {
 	dNode *curr;
 	line *head, *curr_line;
-	int n=0;
+	int n=0, w=0;
 	char c;
 	//Initialize line start
 	head=(line*)malloc(sizeof(line));
@@ -44,22 +49,24 @@ line* createList(FILE *file_in) {
 			curr=curr_line->start; // set the current line's start as the current char
 			curr->prev=NULL;
 			curr->ch=c;
-			n++;
 		}
 		else { // if at the middle of a line
 			curr->next=(dNode*) malloc(sizeof(dNode));
 			(curr->next)->prev=curr;
 			curr=curr->next;
 			curr->ch=c;
-			n++;
 		}
+		if(c=='\t') w+=8;
+		else w++; 
+		n++; //increment line width and size 
 		if(c=='\n') { // if at the end of a line
 			curr_line->end=curr->prev; // set end of line
 			curr_line->size=n-1; //record line size
+			curr_line->width=w-1;
 			curr_line->next_line=(line*)malloc(sizeof(line));
 			(curr_line->next_line)->prev_line=curr_line;
 			curr_line=curr_line->next_line;
-			n=0; //restart count
+			w=n=0; //restart count
 			curr->next=NULL; //assigns null to last node
 		}
 		
@@ -72,7 +79,7 @@ line* createList(FILE *file_in) {
 	}
 	else {
 		curr_line=curr_line->prev_line;
-		free(curr_line->next_line); // free excess line because linux text files end with a \n
+		free(curr_line->next_line); // free excess line because tested text files end with a \n
 		curr_line->next_line=NULL;
 		curr->next=NULL;
 	}
@@ -92,17 +99,17 @@ void displayLine(dNode* head) {
 
 void display(buffer *buff) {
 	line *curr=buff->top;
-	int count=0, row, col, max_row, max_col;
-	getmaxyx(stdscr, max_row, max_col);
+	int count=0, row, col;
 	move(0, 0);
+	clrtobot();
 	while(curr!=NULL) { // traverse lines until it finds NULL
 		displayLine(curr->start);
 		getyx(stdscr, row, col);
-		if((max_row-row)<((curr->size)/max_col)) {
+		if((buff->max_row-row)<((curr->size)/buff->max_col)) { //check if current line is at the last line of the display
 			curr=curr->prev_line;
 			break; // if
 		}
-		if(curr->next_line==NULL) buff->bot=curr;
+		if(curr->next_line==NULL) buff->bot=curr; //check if current line is at eof
 		curr=curr->next_line;
 	}
 	refresh();

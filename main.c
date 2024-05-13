@@ -13,9 +13,7 @@
 #define DELETE_LINE 'd'
 
 int main(int argc, char *argv[]) {
-	int max_row, max_col, row=0, col=0;
 	unsigned int ch; // variable is unsigned int to increase range
-	line *head, *tail;
 	FILE *fiptr, *foptr;
 	buffer buff;
 
@@ -27,31 +25,27 @@ int main(int argc, char *argv[]) {
 	raw(); // Enters raw mode which disables line buffering and control keys
 	noecho(); // Disables echo while doing getch() 
 	
-	getmaxyx(stdscr, max_row, max_col); // get number of rows and column
+	getmaxyx(stdscr, buff.max_row, buff.max_col); // get number of rows and column
 
-	head=createList(fiptr);
-	buff.top=buff.curr_line=head;
-	buff.curr_node=head->start;
+	buff.head=createList(fiptr);
+	buff.top=buff.curr_line=buff.head;
+	buff.curr_node=buff.head->start;
 	display(&buff);
-	WINDOW *subwindow=newwin(1, max_col, max_row-1, 0);
-	wprintw(subwindow, "Rows: %d Columns: %d", max_row, max_col);
-	wrefresh(subwindow); refresh();
-//	mvprintw(max_row-1, 0, "Rows: %d Columns: %d", max_row, max_col); // move then print
 	move(0,0); //move cursor to start
 
 	while(1) {
 		ch=getch();
 		switch(ch) {
 			case UP:
-				mv_up(&row, &col, &buff); break;
+				mv_up(&buff); break;
 			case DOWN:
-				mv_down(&row, &col, &buff); break;
+				mv_down(&buff); break;
 			case RIGHT:
-				mv_right(&row, &col, &buff); break;
+				mv_right(&buff); break;
 			case LEFT:
-				mv_left(&row, &col, &buff); break;
+				mv_left(&buff); break;
 			case INSERT:
-				insert_mode(&row, &col, &buff);
+				insert_mode(&buff);
 				break;
 			case DELETE_CHAR:
 				break;
@@ -62,16 +56,16 @@ int main(int argc, char *argv[]) {
 	}
 
 	fclose(fiptr);
-	mvprintw(max_row-2, 0, "Last Char: %c Last Line Size: %d", (buff.curr_node)->ch, (buff.curr_line)->size); // move then print
-	mvprintw(max_row-3, 0, "Last Line: ", (buff.curr_node)->ch); 
+	mvprintw(buff.max_row-2, 0, "Last Char: %c Last Line Size: %d", (buff.curr_node)->ch, (buff.curr_line)->size); // move then print
+	mvprintw(buff.max_row-3, 0, "Last Line: ", (buff.curr_node)->ch); 
 	displayLine((buff.curr_line)->start);
-	mvprintw(max_row-1, 0, "Save contents? (y/n): ");
+	mvprintw(buff.max_row-1, 0, "Save contents? (y/n): ");
 	refresh(); //print on screen
 	ch=getch(); // wait for user input
 	
 	if(ch=='y') {
 		foptr=fopen(argv[1], "w");
-		save(head, foptr);
+		save(buff.head, foptr);
 	}
 	endwin(); // end curses mode
 	

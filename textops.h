@@ -4,6 +4,8 @@
 void insert_to_list(buffer *buff, char input) {
 	dNode *new_node=malloc(sizeof(dNode)); 
 	buff->curr_line->size+=1;
+	if(input=='\t') buff->curr_line->width+=8;
+	else buff->curr_line->width+=1;
 	if((buff->curr_node)->prev==NULL) { // if current node is at the start of a line
 		new_node->prev=NULL;
 		buff->curr_line->start=new_node;
@@ -52,10 +54,16 @@ int count_size(dNode *head) {
 
 void insert_newline(buffer *buff) {
 	line *new_line=malloc(sizeof(line));
-	if((buff->curr_line)->prev_line==NULL) new_line->prev_line=NULL; // if current line's is at the beginning of file
+	if((buff->curr_line)->prev_line==NULL){
+		new_line->prev_line=NULL; // if current line's is at the beginning of file
+		buff->head=new_line;
+	}
 	else { 
 		new_line->prev_line=(buff->curr_line)->prev_line;
 		(buff->curr_line)->prev_line->next_line=new_line;
+	}
+	if(buff->curr_line==buff->top) { //if current line is at the top of the display
+		buff->top=new_line;
 	}
 	dNode *new_node=malloc(sizeof(dNode));
 	new_node->ch='\n';
@@ -78,49 +86,46 @@ void insert_newline(buffer *buff) {
 	(buff->curr_line)->size-=new_line->size;
 }
 
-void insert_mode(int *row, int *col, buffer *buff) {
+void insert_mode(buffer *buff) {
 	unsigned int key; // vairable is unsigned int to increase range, since characters like backspace are greater than sizeof(char)
-	int max_row, max_col;
-	getmaxyx(stdscr, max_row, max_col);
 	while((key=getch())!=ESCAPE) {
 		switch(key) {
 			case KEY_BACKSPACE:
 				if((buff->curr_line)->prev_line==NULL && (buff->curr_node)->prev==NULL) break; // if we are at the beginning of a file do nothing
 				if((buff->curr_node)->prev==NULL) { // if at beginning of line
-					*col=(buff->curr_line)->prev_line->size;
-					deleteln(); // delete's current line using ncurses func
-					move(--(*row), 0);
+					buff->col=(buff->curr_line->prev_line->size)%(buff->max_col);
+					move(--(buff->row), 0);
 				}
 				else {
 					delch();
-					mvdelch(*row, --(*col));
+					mvdelch(buff->row, --(buff->col));
 				}
 				backspace(buff);
 				display(buff);
-				move(*row, *col);
+				move(buff->row, buff->col);
 				break;
 			case NEWLINE:
 				insert_newline(buff);
 				clrtobot();
 				display(buff);
-				*col=0; // update column
-				move(++(*row), *col);	
+				buff->col=0; // update column
+				move(++(buff->row), buff->col);	
 				break;
 			default:
 				insert_to_list(buff, key);
 				display(buff);
-				if((*col)==max_col-1) {
-					*col=0;
-					(*row)++;
-					move(*row, *col);
+				if(key=='\t') buff->col+=8;
+				else buff->col++;
+				if((buff->col)==(buff->max_col)-1) {
+					buff->col=0;
+					(buff->row)++;
 				}
-				else
-					move(*row, ++(*col));
+				move(buff->row, buff->col);
 		}
 	}
-	if((buff->curr_node)->ch=='\n') mv_left(row, col, buff);
+	if((buff->curr_node)->ch=='\n') mv_left(buff);
 }
 
-//void delete_char(int *col, line buff->curr_line, dNode *buff->curr_node) {
+//void delete_char(int buff->col, line buff->curr_line, dNode *buff->curr_node) {
 //}
 
