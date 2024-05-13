@@ -1,42 +1,42 @@
 #define ESCAPE '\e'
 #define NEWLINE '\n'
 
-void insert_to_list(dNode **curr_node, line *curr_line, char input) {
+void insert_to_list(buffer *buff, char input) {
 	dNode *new_node=malloc(sizeof(dNode)); 
-	curr_line->size+=1;
-	if((*curr_node)->prev==NULL) { // if current node is at the start of a line
+	buff->curr_line->size+=1;
+	if((buff->curr_node)->prev==NULL) { // if current node is at the start of a line
 		new_node->prev=NULL;
-		curr_line->start=new_node;
+		buff->curr_line->start=new_node;
 	}
 	else { // else it's at the middle or end of a line
-		new_node->prev=(*curr_node)->prev;
-		(*curr_node)->prev->next=new_node; 
+		new_node->prev=(buff->curr_node)->prev;
+		(buff->curr_node)->prev->next=new_node; 
 	}
-	new_node->next=(*curr_node);
+	new_node->next=(buff->curr_node);
 	new_node->ch=input;
-	(*curr_node)->prev=new_node; // update current node's previous
+	(buff->curr_node)->prev=new_node; // update current node's previous
 }
 
-void backspace(line **curr_line, dNode **curr_node) {
-	if((*curr_node)->prev==NULL) { // if current node is at start of line
-		if((*curr_line)->prev_line==NULL) return; // if current line is at the beginning of a file do nothing
-		line *temp_line=*curr_line; 
-		*curr_line=(*curr_line)->prev_line;
-		(*curr_line)->next_line=temp_line->next_line;
-		(*curr_line)->size+=temp_line->size; // update size of current line
-		(*curr_node)->prev=(*curr_line)->end; // set the prev node of current node to previous line's end
-		if ((*curr_line)->end==NULL) (*curr_line)->start=temp_line->start; // if current line was empty just swap its start
-		else (*curr_line)->end->next=temp_line->start; // replace current line's end with old line's start
-		(*curr_line)->end=temp_line->end; // update current line's end
+void backspace(buffer *buff) {
+	if((buff->curr_node)->prev==NULL) { // if current node is at start of line
+		if((buff->curr_line)->prev_line==NULL) return; // if current line is at the beginning of a file do nothing
+		line *temp_line=buff->curr_line; 
+		buff->curr_line=(buff->curr_line)->prev_line;
+		(buff->curr_line)->next_line=temp_line->next_line;
+		(buff->curr_line)->size+=temp_line->size; // update size of current line
+		(buff->curr_node)->prev=(buff->curr_line)->end; // set the prev node of current node to previous line's end
+		if ((buff->curr_line)->end==NULL) (buff->curr_line)->start=temp_line->start; // if current line was empty just swap its start
+		else (buff->curr_line)->end->next=temp_line->start; // replace current line's end with old line's start
+		(buff->curr_line)->end=temp_line->end; // update current line's end
 		free(temp_line);
 	}	
 	else {
-		dNode *temp=(*curr_node)->prev;
-		(*curr_node)->prev=temp->prev;
-		if((*curr_node)->next==NULL) (*curr_line)->end==temp->prev; // if current node is the end of a line, change line end
-		if(temp->prev==NULL) (*curr_line)->start=*curr_node; //if no node before temp assign current as start
-		else temp->prev->next=*curr_node;
-		(*curr_line)->size-=1;
+		dNode *temp=(buff->curr_node)->prev;
+		(buff->curr_node)->prev=temp->prev;
+		if((buff->curr_node)->next==NULL) (buff->curr_line)->end==temp->prev; // if current node is the end of a line, change line end
+		if(temp->prev==NULL) (buff->curr_line)->start=buff->curr_node; //if no node before temp assign current as start
+		else temp->prev->next=buff->curr_node;
+		(buff->curr_line)->size-=1;
 		free(temp);
 	}
 }
@@ -50,42 +50,44 @@ int count_size(dNode *head) {
 	return size;
 }
 
-void insert_newline(dNode **curr_node, line **curr_line) {
+void insert_newline(buffer *buff) {
 	line *new_line=malloc(sizeof(line));
-	if((*curr_line)->prev_line==NULL) new_line->prev_line=NULL; // if current line's is at the beginning of file
+	if((buff->curr_line)->prev_line==NULL) new_line->prev_line=NULL; // if current line's is at the beginning of file
 	else { 
-		new_line->prev_line=(*curr_line)->prev_line;
-		(*curr_line)->prev_line->next_line=new_line;
+		new_line->prev_line=(buff->curr_line)->prev_line;
+		(buff->curr_line)->prev_line->next_line=new_line;
 	}
 	dNode *new_node=malloc(sizeof(dNode));
 	new_node->ch='\n';
 	new_node->next=NULL;
 
-	if((*curr_node)->prev==NULL) {
+	if((buff->curr_node)->prev==NULL) {
 		new_line->start=new_node;
 		new_line->end=new_node->prev=NULL;
 	}
 	else {
-		new_line->start=(*curr_line)->start;
-		new_line->end=(*curr_node)->prev;
+		new_line->start=(buff->curr_line)->start;
+		new_line->end=(buff->curr_node)->prev;
 		new_line->end->next=new_node;
-		(*curr_line)->start=*curr_node;
-		(*curr_node)->prev=NULL;
+		(buff->curr_line)->start=buff->curr_node;
+		(buff->curr_node)->prev=NULL;
 	}
-	new_line->next_line=(*curr_line);
-	(*curr_line)->prev_line=new_line;
+	new_line->next_line=(buff->curr_line);
+	(buff->curr_line)->prev_line=new_line;
 	new_line->size=count_size(new_line->start);
-	(*curr_line)->size-=new_line->size;
+	(buff->curr_line)->size-=new_line->size;
 }
 
-void insert_mode(int *row, int *col, line **curr_line, dNode **curr_node) {
+void insert_mode(int *row, int *col, buffer *buff) {
 	unsigned int key; // vairable is unsigned int to increase range, since characters like backspace are greater than sizeof(char)
+	int max_row, max_col;
+	getmaxyx(stdscr, max_row, max_col);
 	while((key=getch())!=ESCAPE) {
 		switch(key) {
 			case KEY_BACKSPACE:
-				if((*curr_line)->prev_line==NULL && (*curr_node)->prev==NULL) break; // if we are at the beginning of a file do nothing
-				if((*curr_node)->prev==NULL) {
-					*col=(*curr_line)->prev_line->size;
+				if((buff->curr_line)->prev_line==NULL && (buff->curr_node)->prev==NULL) break; // if we are at the beginning of a file do nothing
+				if((buff->curr_node)->prev==NULL) { // if at beginning of line
+					*col=(buff->curr_line)->prev_line->size;
 					deleteln(); // delete's current line using ncurses func
 					move(--(*row), 0);
 				}
@@ -93,51 +95,32 @@ void insert_mode(int *row, int *col, line **curr_line, dNode **curr_node) {
 					delch();
 					mvdelch(*row, --(*col));
 				}
-				backspace(curr_line, curr_node);
-				display(*curr_line);
+				backspace(buff);
+				display(buff);
 				move(*row, *col);
 				break;
 			case NEWLINE:
-				insert_newline(curr_node, curr_line);
+				insert_newline(buff);
 				clrtobot();
-				display((*curr_line)->prev_line);
+				display(buff);
 				*col=0; // update column
 				move(++(*row), *col);	
 				break;
 			default:
-				insert_to_list(curr_node, *curr_line, key);
-				insch(key); // insert char to terminal using ncurses func	
-				move(*row, ++(*col));
+				insert_to_list(buff, key);
+				display(buff);
+				if((*col)==max_col-1) {
+					*col=0;
+					(*row)++;
+					move(*row, *col);
+				}
+				else
+					move(*row, ++(*col));
 		}
 	}
-	if((*curr_node)->ch=='\n') mv_left(row, col, curr_line, curr_node);
+	if((buff->curr_node)->ch=='\n') mv_left(row, col, buff);
 }
 
-/*
-				move(*row, 0); // move cursor to start of line for reprinting
-				displayLine((*curr_line)->start); //re-print the current line after change
-	if((*curr_node)->prev==NULL) { // if inserting newline at the start of a line
-		new_line->start=new_node;
-		new_line->end=new_node->prev=NULL;
-	}
-	else if((*curr_node)->ch=='\n') { // if inserting newline from end of a line
-		new_line->start=new_node;
-		new_line->size=0;
-		new_line->end=new_node->prev=NULL;
-		new_line->prev_line=*curr_line;	
-		new_line->next_line=(*curr_line)->next_line;
-		(*curr_line)->next_line=new_line;
-		*curr_line=(*curr_line)->next_line;
-		return;
-	}
-	else { // else newline is inserted somewhere in the middle
-		(*curr_node)->prev->next=new_node;
-		new_line->start=(*curr_line)->start;
-		(*curr_line)->start=(*curr_node);
-		(*curr_node)->prev=NULL;
-	}
-	*curr_line=(*curr_line)->next_line;
-	new_line->next_line=(*curr_line);
-	new_line->size=count_size(new_line->start); //update sizes
-	(*curr_line)->size-=new_line->size;
- */
+//void delete_char(int *col, line buff->curr_line, dNode *buff->curr_node) {
+//}
+

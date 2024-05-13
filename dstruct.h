@@ -18,6 +18,16 @@ typedef struct line{
 	unsigned int size;
 } line;
 
+typedef struct buffer {
+	line *curr_line;
+	dNode *curr_node;
+	line *top;
+	line *bot;
+	line *head;
+	line *tail;
+	int nlines;
+} buffer;
+
 
 line* createList(FILE *file_in) {
 	dNode *curr;
@@ -28,7 +38,6 @@ line* createList(FILE *file_in) {
 	head=(line*)malloc(sizeof(line));
 	curr_line=head;
 	curr_line->next_line=curr_line->prev_line=NULL;
-
 	while(fscanf(file_in, "%c", &c)!=EOF) {//Iterate until EOF
 		if(n==0) { // if start of new line
 			curr_line->start=(dNode*) malloc(sizeof(dNode));
@@ -55,9 +64,8 @@ line* createList(FILE *file_in) {
 		}
 		
 	}
-	if(curr_line->next_line==NULL && curr_line->prev_line==NULL) { //if file was empty or had one line
+	if(curr_line->prev_line==NULL) { //if file was empty or had one line
 		curr_line->start=(dNode*) malloc(sizeof(dNode));
-		curr_line->next_line=NULL;
 		curr_line->end=curr_line->start->prev=curr_line->start->next=NULL;
 		curr_line->start->ch='\n';
 		curr_line->size=0;
@@ -73,28 +81,30 @@ line* createList(FILE *file_in) {
 
 void displayLine(dNode* head) {
 	dNode *curr=head;
+	int row, col;
+	getyx(stdscr, row, col);
+	move(row, 0);
 	while(curr!=NULL) {
 		addch(curr->ch);
-		refresh(); // used to immediately output char to screen
 		curr=curr->next;
 	}
 }
 
-void display(line *head) {
-	line *curr=head;
-	int count=0, row, col;
-	getyx(stdscr, row, col);
-	move(row, 0);
+void display(buffer *buff) {
+	line *curr=buff->top;
+	int count=0, row, col, max_row, max_col;
+	getmaxyx(stdscr, max_row, max_col);
+	move(0, 0);
 	while(curr!=NULL) { // traverse lines until it finds NULL
 		displayLine(curr->start);
-		refresh();
-//		if(curr->next_line!=NULL) { addch('\n'); refresh();}
-		count++;
+		getyx(stdscr, row, col);
+		if((max_row-row)<((curr->size)/max_col)) {
+			curr=curr->prev_line;
+			break; // if
+		}
+		if(curr->next_line==NULL) buff->bot=curr;
 		curr=curr->next_line;
 	}
-//	printw("\nLines printed: %d", count);
-	getmaxyx(stdscr, row, col);
-	mvprintw(row-1, 0, "Rows: %d Columns: %d", row, col);
 	refresh();
 }
 
