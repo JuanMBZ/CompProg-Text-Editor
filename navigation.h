@@ -15,7 +15,6 @@ int count_char_dist(buffer *buff) { //returns distance of current node from star
 void mv_up(buffer *buff) {
 	if((buff->curr_line)->prev_line==NULL) return; // if at the start of a file
 	int i=0;
-	mvprintw(40, 0, "Char distance: %d\n", count_char_dist(buff));
 	buff->curr_line=(buff->curr_line)->prev_line;
 	buff->curr_node=(buff->curr_line)->start;
 	if(buff->curr_line->width>buff->max_col) { // if current line is wrapped (line is longer than display width)
@@ -62,7 +61,7 @@ void mv_down(buffer *buff) {
 }
 
 void mv_right(buffer *buff) {
-	if((buff->curr_node)->ch=='\n') return; // if current node is a newline char
+	if((buff->curr_node)->ch=='\n') return; // if current line is empty
 	if((buff->curr_node)->next->next==NULL) return; // if current node is at the end, do nothing
 	if(buff->col==(buff->max_col-1)) { //if at the right edge of display
 		buff->row+=1;

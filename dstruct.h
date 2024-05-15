@@ -33,6 +33,16 @@ typedef struct buffer { //contains info on the contents of the text editor and i
 	int max_row, max_col; // max y and x for the display, must be static
 } buffer;
 
+line *createNewList() { // Initialize an empty buffer for a new file
+	dNode *curr=malloc(sizeof(dNode));
+	line *head=malloc(sizeof(line));
+	head->next_line=head->prev_line=NULL;
+	head->start=curr;
+	head->size=head->width=0;
+	curr->next=curr->prev=head->end=NULL;
+	curr->ch='\n';
+	return head;
+}
 
 line* createList(FILE *file_in) {
 	dNode *curr;
