@@ -88,28 +88,6 @@ void mv_down(buffer *buff) {
 	if(i<buff->col) buff->col=i; //if new column after moving is < previous column, update column
 	move(buff->row, buff->col);
 }
-/*
-		int overflow;
-		if(buff->curr_line->width>buff->max_col) {
-			overflow=(buff->curr_line->width/buff->max_col);
-			if(buff->curr_line->width%buff->max_col==0) overflow-=1;
-			for(int u=0; u<overflow; u++) {
-				if(buff->top->width>buff->max_col) {
-					int top_overflow=0;
-					top_overflow=(buff->top->width/buff->max_col);
-					if(buff->top->width%buff->max_col==0) top_overflow-=1; 
-					buff->row-=top_overflow;
-				}
-				buff->top=buff->top->next_line;
-			}
-		}
-		if(buff->top->width>buff->max_col) {
-			int top_overflow=(buff->top->width/buff->max_col);
-			if(buff->top->width%buff->max_col==0) top_overflow-=1;
-			buff->row-=top_overflow;
-		}
- */
-
 
 void mv_right(buffer *buff) {
 	if((buff->curr_node)->ch=='\n') return; // if current line is empty

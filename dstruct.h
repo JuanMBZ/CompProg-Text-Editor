@@ -24,14 +24,14 @@ typedef struct buffer { //contains info on the contents of the text editor and i
 	dNode *curr_node;
 	char *file_name;
 	
-	line *top;
-	line *bot;
-	line *head;
-	line *tail;
+	line *top, *bot;
+	line *head, *tail;
+	line *copy_line_head, *copy_line_tail;
+	dNode *copy_head, *copy_tail;
 	
 	int row, col; // coordinates of the cursor on the display
-	int nlines; // total number of lines
 	int max_row, max_col; // max y and x for the display, must be static
+	int copy_flag; // if 0=empty, 1=dNodes, 2=lines
 } buffer;
 
 line *createNewList() { // Initialize an empty buffer for a new file
@@ -123,16 +123,16 @@ void display(buffer *buff) {
 		getyx(stdscr, row, col);
 		if(row==buff->max_row-1) {
 			buff->bot=curr;
-			move(buff->max_row-1, 0);
-			clrtoeol();
-			attron(COLOR_PAIR(1));
-			printw("%-*s", buff->max_col-1, buff->file_name);
-			attroff(COLOR_PAIR(1));
 			break;
 		}
 		if(curr->next_line==NULL) buff->bot=curr; //check if current line is at eof
 		curr=curr->next_line;
 	}
+	move(buff->max_row-1, 0);
+	clrtoeol();
+	attron(COLOR_PAIR(1));
+	printw("%-*s", buff->max_col-1, buff->file_name);
+	attroff(COLOR_PAIR(1));
 	refresh();
 }
 
