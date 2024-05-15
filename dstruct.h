@@ -22,6 +22,7 @@ typedef struct line{ // data struct for connectin lines and info about the lines
 typedef struct buffer { //contains info on the contents of the text editor and info on the display
 	line *curr_line;
 	dNode *curr_node;
+	char *file_name;
 	
 	line *top;
 	line *bot;
@@ -109,15 +110,25 @@ void displayLine(dNode* head) {
 
 void display(buffer *buff) {
 	line *curr=buff->top;
+	dNode *curr_node;
 	int count=0, row, col;
 	move(0, 0);
 	clrtobot();
 	while(curr!=NULL) { // traverse lines until it finds NULL
-		displayLine(curr->start);
+		curr_node=curr->start;
+		while(curr_node!=NULL) {
+			addch(curr_node->ch);
+			curr_node=curr_node->next;
+		}
 		getyx(stdscr, row, col);
-		if((buff->max_row-row)<((curr->size)/buff->max_col)) { //check if current line is at the last line of the display
-			curr=curr->prev_line;
-			break; // if
+		if(row==buff->max_row-1) {
+			buff->bot=curr;
+			move(buff->max_row-1, 0);
+			clrtoeol();
+			attron(COLOR_PAIR(1));
+			printw("%-*s", buff->max_col-1, buff->file_name);
+			attroff(COLOR_PAIR(1));
+			break;
 		}
 		if(curr->next_line==NULL) buff->bot=curr; //check if current line is at eof
 		curr=curr->next_line;

@@ -17,7 +17,7 @@ void mv_up(buffer *buff) {
 	int i=0;
 	buff->curr_line=(buff->curr_line)->prev_line;
 	buff->curr_node=(buff->curr_line)->start;
-	if(buff->curr_line->width>buff->max_col) { // if current line is wrapped (line is longer than display width)
+	if(buff->curr_line->width>buff->max_col && buff->curr_line->next_line!=buff->top) { // if current line is wrapped (line is longer than display width)
 		int overflow;
 		overflow=(buff->curr_line->width/buff->max_col);
 		if(buff->curr_line->width%buff->max_col==0) overflow-=1;
@@ -31,7 +31,12 @@ void mv_up(buffer *buff) {
 			(buff->curr_node)=(buff->curr_node)->next;
 		}
 	}
-	buff->row-=1; // move row coordinate up 1 + how many times the line wrapped
+	if(buff->curr_line->next_line==buff->top) {
+		buff->top=buff->top->prev_line;
+		display(buff);
+	}
+	else
+		buff->row-=1; // move row coordinate up 1 + how many times the line wrapped
 	if(i<buff->col) buff->col=i;
 	move(buff->row, buff->col);
 }
@@ -42,8 +47,15 @@ void mv_down(buffer *buff) {
 		int overflow;
 		overflow=(buff->curr_line->width/buff->max_col);
 		if(buff->curr_line->width%buff->max_col==0) overflow-=1;
-		buff->row+=(overflow-(count_char_dist(buff)/buff->max_col));
-		if((count_char_dist(buff)%buff->max_col)==0) buff->row-=1;
+		if(buff->curr_line==buff->bot) { //if the bottom line is wrapped
+			for(int p=0; p<overflow; p++) {
+				buff->top=buff->top->next_line;
+			}
+		}
+		else {
+			buff->row+=(overflow-(count_char_dist(buff)/buff->max_col));
+			if((count_char_dist(buff)%buff->max_col)==0) buff->row-=1;
+		}
 	}
 	int i=0;
 	buff->curr_line=(buff->curr_line)->next_line;
@@ -55,10 +67,49 @@ void mv_down(buffer *buff) {
 			(buff->curr_node)=(buff->curr_node)->next;
 		}
 	}
-	buff->row+=1; // move row coordinate up 1 + how many times the line wrapped
+	if(buff->curr_line->prev_line==buff->bot) { //if moving from the bottom line
+		if(buff->curr_line->width>buff->max_col) { // if line to move to is wrapped
+			int overflow=(buff->curr_line->width/buff->max_col);
+			if(buff->curr_line->width%buff->max_col==0) overflow-=1;
+			for(int p=0; p<overflow; p++) {
+				buff->top=buff->top->next_line;
+				buff->row-=1;
+			}
+		}
+		if(buff->top->width>buff->max_col) { //if top line is wrapper
+			int top_overflow=buff->top->width/buff->max_col;
+			if(buff->top->width%buff->max_col==0) top_overflow-=1;
+			buff->row-=top_overflow;
+		}
+		buff->top=buff->top->next_line;
+		display(buff);
+	}
+	else buff->row+=1; // move row coordinate up 1 + how many times the line wrapped
 	if(i<buff->col) buff->col=i; //if new column after moving is < previous column, update column
 	move(buff->row, buff->col);
 }
+/*
+		int overflow;
+		if(buff->curr_line->width>buff->max_col) {
+			overflow=(buff->curr_line->width/buff->max_col);
+			if(buff->curr_line->width%buff->max_col==0) overflow-=1;
+			for(int u=0; u<overflow; u++) {
+				if(buff->top->width>buff->max_col) {
+					int top_overflow=0;
+					top_overflow=(buff->top->width/buff->max_col);
+					if(buff->top->width%buff->max_col==0) top_overflow-=1; 
+					buff->row-=top_overflow;
+				}
+				buff->top=buff->top->next_line;
+			}
+		}
+		if(buff->top->width>buff->max_col) {
+			int top_overflow=(buff->top->width/buff->max_col);
+			if(buff->top->width%buff->max_col==0) top_overflow-=1;
+			buff->row-=top_overflow;
+		}
+ */
+
 
 void mv_right(buffer *buff) {
 	if((buff->curr_node)->ch=='\n') return; // if current line is empty

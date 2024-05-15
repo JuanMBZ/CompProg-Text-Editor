@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <ncurses.h>
 #include "dstruct.h"
 #include "navigation.h"
@@ -28,8 +30,11 @@ int main(int argc, char *argv[]) {
 	else buff.head=createList(fptr);
 	buff.top=buff.curr_line=buff.head;
 	buff.curr_node=buff.head->start;
+	buff.file_name=argv[1];
 
 	initscr(); // Starts curses mode 
+	start_color();
+	init_pair(1, COLOR_BLACK, COLOR_WHITE);
 	keypad(stdscr, TRUE); // Enables use of keypad and F keys
 	raw(); // Enters raw mode which disables line buffering and control keys
 	noecho(); // Disables echo while doing getch() 
@@ -75,8 +80,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	mvprintw(buff.max_row-2, 0, "Last Char: %c Last Line Size: %d Width: %d Max_row: %d Col: %d", (buff.curr_node)->ch, (buff.curr_line)->size, buff.curr_line->width, buff.max_row, buff.max_col); // debugging info
-	mvprintw(buff.max_row-4, 0, "Last Line: ", (buff.curr_node)->ch); 
-	displayLine((buff.curr_line)->start);
+	mvprintw(0, 0, "Bot Line: "); 
+	displayLine(buff.bot->start);
 	mvprintw(buff.max_row-1, 0, "Save contents? (y/n): ");
 	refresh(); //print on screen
 	ch=getch(); // wait for user input
