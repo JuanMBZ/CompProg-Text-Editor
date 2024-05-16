@@ -8,6 +8,7 @@ typedef struct dNode { // data struct to store each individual char
 	char ch;
 	struct dNode *prev;
 	struct dNode *next;
+	int color;
 } dNode;
 
 typedef struct line{ // data struct for connectin lines and info about the lines
@@ -60,12 +61,14 @@ line* createList(FILE *file_in) {
 			curr=curr_line->start; // set the current line's start as the current char
 			curr->prev=NULL;
 			curr->ch=c;
+			curr->color=-0;
 		}
 		else { // if at the middle of a line
 			curr->next=(dNode*) malloc(sizeof(dNode));
 			(curr->next)->prev=curr;
 			curr=curr->next;
 			curr->ch=c;
+			curr->color=-0;
 		}
 		if(c=='\t') w+=8;
 		else w++; 
@@ -117,7 +120,7 @@ void display(buffer *buff) {
 	while(curr!=NULL) { // traverse lines until it finds NULL
 		curr_node=curr->start;
 		while(curr_node!=NULL) {
-			addch(curr_node->ch);
+			addch(curr_node->ch | COLOR_PAIR(curr_node->color));
 			curr_node=curr_node->next;
 		}
 		getyx(stdscr, row, col);

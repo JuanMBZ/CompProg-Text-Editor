@@ -135,12 +135,14 @@ void insert_mode(buffer *buff) {
 					else buff->col-=1;
 				}
 				backspace(buff);
+				update_syntax(buff);
 				display(buff);
 				move(buff->row, buff->col);
 				break;
 			case NEWLINE:
 				insert_newline(buff);
 				clrtobot();
+				update_syntax(buff);
 				display(buff);
 				buff->col=0; // update column
 				move(++(buff->row), buff->col);	
@@ -148,6 +150,7 @@ void insert_mode(buffer *buff) {
 			default:
 				if((key>126 || key<32) && key!='\t') continue; // if ch is not in range of printable ascii characters, do nothing
 				insert_to_list(buff, key);
+				update_syntax(buff);
 				display(buff);
 				if(key=='\t') buff->col+=8;
 				else buff->col++;
@@ -171,6 +174,7 @@ void delete_char(buffer *buff) {
 	if(temp->prev==NULL) buff->curr_line->start=buff->curr_node; //if deleting a node brings us to start of line, update start
 	else temp->prev->next=buff->curr_node;
 	free(temp);
+	update_syntax(buff);
 	display(buff);
 	move(buff->row, buff->col);
 }
@@ -185,6 +189,7 @@ void delete_line(buffer *buff) {
 		}
 		buff->curr_line->start=buff->curr_node=temp_node;
 		buff->curr_node->next=buff->curr_node->prev=NULL;
+		update_syntax(buff);
 		display(buff);
 		move(0,0);
 		return;
@@ -223,6 +228,7 @@ void delete_line(buffer *buff) {
 		free(temp_node->prev);
 	} free(temp_node); //free final node
 	free(temp); //finally, free line
+	update_syntax(buff);
 	display(buff);
 	move(buff->row,buff->col);
 }

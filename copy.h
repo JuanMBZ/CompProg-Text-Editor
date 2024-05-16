@@ -152,6 +152,7 @@ void paste(buffer *buff) {
 			else buff->col+=1;
 			curr=curr->next;
 		}
+		update_syntax(buff);
 		display(buff);
 		move(buff->row, buff->col);
 	}
@@ -171,6 +172,7 @@ void paste(buffer *buff) {
 		new_line->next_line=save_line;
 		buff->row=save_row;
 		buff->col=save_col;
+		update_syntax(buff);
 		display(buff);
 		move(buff->row, buff->col);
 	}

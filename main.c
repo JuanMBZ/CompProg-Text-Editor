@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ncurses.h>
+#include <ctype.h>
 #include "dstruct.h"
 #include "navigation.h"
 #include "textops.h"
 #include "copy.h"
+#include "syntax.h"
 
 #define UP 'k'
 #define DOWN 'j'
@@ -41,11 +43,18 @@ int main(int argc, char *argv[]) {
 
 	initscr(); // Starts curses mode 
 	start_color();
-	init_pair(1, COLOR_BLACK, COLOR_WHITE);
+	init_pair(1, COLOR_BLACK, COLOR_WHITE); //for highlight
+	init_pair(2, COLOR_MAGENTA, COLOR_BLACK);
+	init_pair(3, COLOR_YELLOW, COLOR_BLACK);
+	init_pair(4, COLOR_CYAN, COLOR_BLACK);
+	init_pair(5, COLOR_GREEN, COLOR_BLACK);
+	init_pair(6, COLOR_WHITE, COLOR_BLACK);
+
 	keypad(stdscr, TRUE); // Enables use of keypad and F keys
 	raw(); // Enters raw mode which disables line buffering and control keys
 	noecho(); // Disables echo while doing getch() 
 	getmaxyx(stdscr, buff.max_row, buff.max_col); // get number of rows and column
+	update_syntax(&buff);
 	display(&buff);
 	move(0,0); //move cursor to start
 
@@ -97,9 +106,9 @@ int main(int argc, char *argv[]) {
 		if(ch=='q') break;
 	}
 
-	mvprintw(buff.max_row-2, 0, "Last Char: %c Last Line Size: %d Width: %d Max_row: %d Col: %d", (buff.curr_node)->ch, (buff.curr_line)->size, buff.curr_line->width, buff.max_row, buff.max_col); // debugging info
-	mvprintw(40, 0, "Current Line buffer: "); 
-	displayLine(buff.curr_line->start);
+//	mvprintw(buff.max_row-2, 0, "Last Char: %c Last Line Size: %d Width: %d Max_row: %d Col: %d", (buff.curr_node)->ch, (buff.curr_line)->size, buff.curr_line->width, buff.max_row, buff.max_col); // debugging info
+//	mvprintw(40, 0, "Current Line buffer: "); 
+//	displayLine(buff.curr_line->start);
 	attron(COLOR_PAIR(1));
 	mvprintw(buff.max_row-1, 0, "Save contents? (y/n): ");
 	attroff(COLOR_PAIR(1));
