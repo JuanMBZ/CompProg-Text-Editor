@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	mvprintw(buff.max_row-2, 0, "Last Char: %c Last Line Size: %d Width: %d Max_row: %d Col: %d", (buff.curr_node)->ch, (buff.curr_line)->size, buff.curr_line->width, buff.max_row, buff.max_col); // debugging info
-	mvprintw(42, 0, "Last Line buffer: "); 
+	mvprintw(40, 0, "Current Line buffer: "); 
 	displayLine(buff.curr_line->start);
 	attron(COLOR_PAIR(1));
 	mvprintw(buff.max_row-1, 0, "Save contents? (y/n): ");

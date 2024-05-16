@@ -14,6 +14,7 @@ void clear_copybuffer(buffer *buff) {
 		free(q);
 	}free(temp);
 }
+
 void select_mode(buffer *buff) {
 	unsigned int ch;
 	int direction=0; //if + head->tail, if - tail<-head, if 0 head==tail
@@ -62,6 +63,37 @@ void select_mode(buffer *buff) {
 	}
 }
 
+dNode* copy_line(dNode *source) {
+	dNode *curr=malloc(sizeof(dNode)), *head, *copy=source;
+	head=curr;
+	curr->ch=copy->ch;
+	while(copy->next!=NULL) { //copy all nodes from source to curr
+		copy=copy->next;
+		curr->next=malloc(sizeof(dNode));
+		curr=curr->next;
+		curr->ch=copy->ch;
+	}	
+	curr->ch=copy->ch;
+	curr->next=NULL;
+	return head;
+}
+void clear_copyLine(buffer *buff) {
+	if(buff->copy_line_head==NULL) return;
+	line *temp_line=buff->copy_line_head, *p;
+	dNode *temp, *q;
+	while(temp_line->next_line!=NULL) {
+		p=temp_line;
+		temp_line=temp_line->next_line;
+		temp=p->start;
+		while(temp->next!=NULL) { //free all nodes
+			q=temp;
+			temp=temp->next;
+			free(q);
+		} free(temp);
+		free(p); //free line
+	}
+}
+
 void selectLine_mode(buffer *buff) {
 	unsigned int ch;
 	int direction=0; //if + head->tail, if - tail<-head, if 0 head==tail
@@ -69,35 +101,50 @@ void selectLine_mode(buffer *buff) {
 	head=buff->curr_line;
 	while((ch=getch())!=ESCAPE) {
 		switch(ch) {
-			case UP: KEY_UP:
-				 mv_up(buff);
-				 direction--;
-				 break;
-			case DOWN: KEY_DOWN:
-				   mv_down(buff);
-				   direction++;
+			case UP: case KEY_UP:
+				mv_up(buff);
+				direction--;
+				break;
+			case DOWN: case KEY_DOWN:
+			  	mv_down(buff);
+			   	direction++;
+				break;
 			case 'S': return;
 			case COPY:
 				clear_copyLine(buff);
 				if(direction==0) {
-
+					buff->copy_line_head=malloc(sizeof(line));
+					buff->copy_line_head->start=copy_line(head->start);
+					buff->copy_line_head->next_line=NULL;
+					return;
 				}
 				if(direction>0) {
-
+					tail=buff->curr_line;	
 				}
 				if(direction<0) {
-
+					tail=head;
+					head=buff->curr_line;
 				}
+				line *curr=malloc(sizeof(line));
+				buff->copy_line_head=curr;
+				curr->start=copy_line(head->start);
+				while(head!=tail) {
+					head=head->next_line;
+					curr->next_line=malloc(sizeof(line));
+					curr=curr->next_line;
+					curr->start=copy_line(head->start);
+				}
+				curr->next_line=NULL;
+				buff->copy_flag=2;
+				return;
 		}
 	}
-
 }
 
 void paste(buffer *buff) {
-	if(buff->copy_flag==0) return;
-	if(buff->copy_flag==1) {
-		dNode *curr=buff->copy_head, *save=buff->curr_node;
-		int saved_col=buff->col, saved_row=buff->row;
+	if(buff->copy_flag==0) return; //empty copy buffers
+	if(buff->copy_flag==1) { //paste text
+		dNode *curr=buff->copy_head;
 		append(buff);
 		while(curr!=NULL) {
 			insert_to_list(buff, curr->ch);
@@ -105,6 +152,25 @@ void paste(buffer *buff) {
 			else buff->col+=1;
 			curr=curr->next;
 		}
+		display(buff);
+		move(buff->row, buff->col);
+	}
+	if(buff->copy_flag==2) { //paste line
+		line *curr=buff->copy_line_head, *save_line=buff->curr_line->next_line, *new_line=malloc(sizeof(line));
+		int save_row=buff->row, save_col=buff->col;
+		buff->curr_line->next_line=new_line;
+		new_line->prev_line=buff->curr_line->prev_line;
+		new_line->start=copy_line(curr->start);
+		while(curr->next_line!=NULL) {
+			curr=curr->next_line;
+			new_line->next_line=malloc(sizeof(line));
+			new_line->next_line->prev_line=new_line;
+			new_line=new_line->next_line;
+			new_line->start=copy_line(curr->start);
+		}
+		new_line->next_line=save_line;
+		buff->row=save_row;
+		buff->col=save_col;
 		display(buff);
 		move(buff->row, buff->col);
 	}

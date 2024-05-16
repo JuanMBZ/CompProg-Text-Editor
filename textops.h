@@ -35,7 +35,7 @@ void backspace(buffer *buff) {
 		free(temp_line);
 	}	
 	else {
-		if(buff->curr_node->ch=='\n') buff->curr_line->width-=8;
+		if(buff->curr_node->ch=='\t') buff->curr_line->width-=8;
 		else buff->curr_line->width-=1;
 		dNode *temp=(buff->curr_node)->prev;
 		(buff->curr_node)->prev=temp->prev;
@@ -131,8 +131,8 @@ void insert_mode(buffer *buff) {
 					move(--(buff->row), 0);
 				}
 				else {
-					delch();
-					mvdelch(buff->row, --(buff->col));
+					if(buff->curr_node->prev->ch=='\t') buff->col-=8;
+					else buff->col-=1;
 				}
 				backspace(buff);
 				display(buff);
@@ -146,6 +146,7 @@ void insert_mode(buffer *buff) {
 				move(++(buff->row), buff->col);	
 				break;
 			default:
+				if((key>126 || key<32) && key!='\t') continue; // if ch is not in range of printable ascii characters, do nothing
 				insert_to_list(buff, key);
 				display(buff);
 				if(key=='\t') buff->col+=8;
