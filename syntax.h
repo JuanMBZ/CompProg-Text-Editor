@@ -13,8 +13,7 @@ void update_syntax(buffer *buff) {
 	dNode *curr_node=curr_line->start;
 	char ch;
 	int in_string=0;
-	char *keywords1[] = {"switch", "if", "while", "for", "break", "continue", "return", "else", "struct", "typedef", "case", "int", "long", "double", "float", "char", "unsigned", "signed", "void", "#define"}; // 12
-//	char *keywords2[] = {"int", "long", "double", "float", "char", "unsigned", "signed", "void", "#define"};// 8
+	char *keywords1[] = {"switch", "if", "while", "for", "break", "continue", "return", "else", "struct", "typedef", "case", "int", "long", "double", "float", "char", "unsigned", "signed", "void"}; // 19 keywords
 
 	while(curr_line!=NULL) { //reset
 		while(curr_node!=NULL) {
@@ -34,8 +33,23 @@ void update_syntax(buffer *buff) {
 				if(isdigit(ch)) {
 					curr_node->color=MAGENTA;
 				}
+				if(ch=='#') {
+					dNode *temp=curr_node;
+					while(temp->next!=NULL) {
+						temp->color=MAGENTA;
+						temp=temp->next;
+					}
+				}
+				else if(ch=='/' && curr_node->next->ch=='/') { //for single line comments
+					dNode *curr=curr_node;
+					while(curr->next!=NULL) {
+						curr->color=CYAN;
+						curr=curr->next;
+					}
+					break;
+				}
 					int j;
-					for(j=0; j<20; j++){
+					for(j=0; j<19; j++){
 						int slen=strlen(keywords1[j]), count=0;
 						dNode *search=curr_node, *started=curr_node;
 						while(search->next!=NULL && search->ch==keywords1[j][count]) {
@@ -51,6 +65,7 @@ void update_syntax(buffer *buff) {
 								break;
 							}
 							else if(is_separator(search->ch)) {
+								search=search->prev;
 								while(started!=search) {
 									started->color=YELLOW;
 									started=started->next;
@@ -82,7 +97,7 @@ void update_syntax(buffer *buff) {
 			else if(curr_node->prev!=NULL) { //for keywords in body of line
 				if(is_separator(curr_node->prev->ch)) {
 					int j;
-					for(j=0; j<20; j++){
+					for(j=0; j<19; j++){
 						int slen=strlen(keywords1[j]), count=0;
 						dNode *search=curr_node, *started=curr_node;
 						while(search->next!=NULL && search->ch==keywords1[j][count]) {
@@ -98,6 +113,7 @@ void update_syntax(buffer *buff) {
 								break;
 							}
 							else if(is_separator(search->ch)) {
+								search=search->prev;
 								while(started!=search) {
 									started->color=YELLOW;
 									started=started->next;
